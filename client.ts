@@ -41,16 +41,13 @@ class GameScene extends Phaser.Scene {
 
   private VELOCITY = 100;
   private wsClient?: WebSocket;
-
-  private id = uuid();
-  private players: {[key: string]: Phaser.GameObjects.Sprite} = {};
-
-
-  // private player?: Phaser.GameObjects.Sprite;
   private leftKey?: Phaser.Input.Keyboard.Key;
   private rightKey?: Phaser.Input.Keyboard.Key;
   private upKey?: Phaser.Input.Keyboard.Key;
   private downKey?: Phaser.Input.Keyboard.Key;
+
+  private id = uuid();
+  private players: {[key: string]: Phaser.GameObjects.Sprite} = {};
 
   constructor() { super({ key: "GameScene" }); }
 
@@ -72,7 +69,7 @@ class GameScene extends Phaser.Scene {
     // Initialize the websocket client
     this.wsClient = new WebSocket(`ws://${this.HOST}:${this.PORT}`);
     this.wsClient.onopen = (event) => console.log(event);
-    // TODO: multiplayer functionality
+
     this.wsClient.onmessage = (wsMsgEvent) => {
       const allCoords: ICoords = JSON.parse(wsMsgEvent.data);
       for (const playerId of Object.keys(allCoords)) {
@@ -91,7 +88,7 @@ class GameScene extends Phaser.Scene {
           } else {
             player.setX(x);
             player.setY(y);
-            player.setFrame(frame);  
+            player.setFrame(frame);
           }
         } else {
           // We have not seen this player before, create it!
@@ -158,48 +155,48 @@ class GameScene extends Phaser.Scene {
   public update() {
     for (const playerId of Object.keys(this.players)) {
       const player = this.players[playerId];
-  
+
       if (playerId !== this.id) {
-        player.setTint(0x0000aa); // so we can tell our guy apart
+        player.setTint(0x0000aa);
         player.update();
         continue;
       }
-    if (this.players[this.id]) {
+
       let moving = false;
       if (this.leftKey && this.leftKey.isDown) {
-        (this.players[this.id].body as Phaser.Physics.Arcade.Body).setVelocityX(-this.VELOCITY);
-        this.players[this.id].play("left", true);
+        (player.body as Phaser.Physics.Arcade.Body).setVelocityX(-this.VELOCITY);
+        player.play("left", true);
         moving = true;
       } else if (this.rightKey && this.rightKey.isDown) {
-        (this.players[this.id].body as Phaser.Physics.Arcade.Body).setVelocityX(this.VELOCITY);
-        this.players[this.id].play("right", true);
+        (player.body as Phaser.Physics.Arcade.Body).setVelocityX(this.VELOCITY);
+        player.play("right", true);
         moving = true;
       } else {
-        (this.players[this.id].body as Phaser.Physics.Arcade.Body).setVelocityX(0);
+        (player.body as Phaser.Physics.Arcade.Body).setVelocityX(0);
       }
       if (this.upKey && this.upKey.isDown) {
-        (this.players[this.id].body as Phaser.Physics.Arcade.Body).setVelocityY(-this.VELOCITY);
-        this.players[this.id].play("up", true);
+        (player.body as Phaser.Physics.Arcade.Body).setVelocityY(-this.VELOCITY);
+        player.play("up", true);
         moving = true;
       } else if (this.downKey && this.downKey.isDown) {
-        (this.players[this.id].body as Phaser.Physics.Arcade.Body).setVelocityY(this.VELOCITY);
-        this.players[this.id].play("down", true);
+        (player.body as Phaser.Physics.Arcade.Body).setVelocityY(this.VELOCITY);
+        player.play("down", true);
         moving = true;
       } else {
-        (this.players[this.id].body as Phaser.Physics.Arcade.Body).setVelocityY(0);
+        (player.body as Phaser.Physics.Arcade.Body).setVelocityY(0);
       }
       if (!moving) {
-        (this.players[this.id].body as Phaser.Physics.Arcade.Body).setVelocity(0);
-        this.players[this.id].anims.stop();
+        (player.body as Phaser.Physics.Arcade.Body).setVelocity(0);
+        player.anims.stop();
       } else if (this.wsClient) {
         this.wsClient.send(JSON.stringify({
           id: this.id,
-          x: this.players[this.id].x,
-          y: this.players[this.id].y,
-          frame: this.players[this.id].frame.name
+          x: player.x,
+          y: player.y,
+          frame: player.frame.name
         }));
       }
-      this.players[this.id].update();
+      player.update();
     }
   }
 }
